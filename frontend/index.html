@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital System - Gestión Integral</title>
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; }
+        header { background-color: #2c3e50; color: white; padding: 1rem; text-align: center; }
+        
+        /* --- TABS DE NAVEGACIÓN --- */
+        .tabs { display: flex; justify-content: center; background: #34495e; }
+        .tab-btn { background: none; border: none; padding: 15px 30px; color: #bdc3c7; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        .tab-btn:hover { color: white; background: #2c3e50; }
+        .tab-btn.active { color: white; border-bottom: 3px solid #3498db; background: #2c3e50; font-weight: bold; }
+
+        /* --- CONTENEDORES --- */
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; display: none; }
+        .container.active { display: block; }
+        
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 300px; }
+
+        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 0.5rem; }
+        h3 { color: #7f8c8d; margin-top: 0; }
+
+        /* --- FORMULARIOS Y TABLAS --- */
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-secondary { background-color: #95a5a6; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* --- NOTIFICACIONES (MÉDICO) --- */
+        #listaNotificaciones { max-height: 300px; overflow-y: auto; }
+        .notificacion-item { padding: 10px; border-left: 4px solid #f1c40f; background: #fffcf5; margin-bottom: 5px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
+        .modal-error { color: #e74c3c; }
+        .modal-success { color: #27ae60; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏥 Sistema Hospitalario</h1>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="cambiarTab('vista-paciente')">👤 Vista Paciente</button>
+        <button class="tab-btn" onclick="cambiarTab('vista-medico')">👨‍⚕️ Vista Médico</button>
+    </div>
+
+    <div id="vista-paciente" class="container active">
+        
+        <div class="card">
+            <h2>📅 Agendar Cita</h2>
+            <div class="row">
+                <div class="col">
+                    <h3>1. Seleccione Médico</h3>
+                    <select id="p_selectMedico" onchange="cargarHorariosDisponibles()">
+                        <option value="">-- Seleccione una Especialidad/Médico --</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <h3>2. Horarios Disponibles</h3>
+                    <div id="p_tablaHorarios">
+                        <p style="color:#7f8c8d">Seleccione un médico para ver horarios.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎟️ Mis Turnos</h2>
+            <div class="row" style="align-items: flex-end;">
+                <div class="col">
+                    <label>Nombre:</label>
+                    <input type="text" id="p_busqNombre" placeholder="Tu nombre">
+                </div>
+                <div class="col">
+                    <label>Apellido:</label>
+                    <input type="text" id="p_busqApellido" placeholder="Tu apellido">
+                </div>
+                <div class="col" style="flex: 0;">
+                    <button class="btn-secondary" onclick="buscarMisTurnos()">Buscar</button>
+                </div>
+            </div>
+            <table id="p_tablaMisTurnos">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Médico</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4">Ingresa tus datos para buscar.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="vista-medico" class="container">
+        
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <h2>👨‍⚕️ Registrar Nuevo Médico</h2>
+                    <form id="formNuevoMedico" onsubmit="event.preventDefault();">
+                        <label>Nombre:</label>
+                        <input type="text" id="m_nombre" required>
+                        <label>Apellido:</label>
+                        <input type="text" id="m_apellido" required>
+                        <label>Especialidad:</label>
+                        <input type="text" id="m_especialidad" required>
+                        <button type="button" onclick="registrarMedico()" class="btn-primary">Registrar Médico</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>🕒 Gestionar Disponibilidad</h2>
+                    <label>Soy el Médico:</label>
+                    <select id="m_selectMedicoGestor" onchange="conectarNotificaciones()"></select>
+                    
+                    <label>Nueva Fecha/Hora Disponible:</label>
+                    <input type="datetime-local" id="m_nuevaFecha">
+                    <button onclick="agregarDisponibilidad()" class="btn-success">Agregar Horario</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card" style="background-color: #fffde7; border: 1px solid #f1c40f;">
+                    <h2>🔔 Centro de Notificaciones (Simulación Kafka)</h2>
+                    <p style="font-size: 0.8rem;">Este panel se actualiza automáticamente cada 5 seg.</p>
+                    <div id="listaNotificaciones">
+                        <div style="padding:10px; color:#aaa;">Sin nuevas notificaciones...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalReserva" class="modal-overlay">
+        <div class="modal-box">
+            <h3 class="modal-title">Confirmar Reserva</h3>
+            <p>Estás a punto de agendar con el <strong id="modal_medico_nombre"></strong></p>
+            <p>Fecha: <strong id="modal_fecha"></strong></p>
+            
+            <label style="text-align: left;">Tu Nombre:</label>
+            <input type="text" id="modal_paciente_nombre">
+            
+            <label style="text-align: left;">Tu Apellido:</label>
+            <input type="text" id="modal_paciente_apellido">
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1rem;">
+                <button onclick="cerrarModal()" class="btn-secondary">Cancelar</button>
+                <button onclick="confirmarReserva()" class="btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalAlerta" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="alertaTitulo" class="modal-title">Atención</h3>
+            <p id="alertaMensaje"></p>
+            <button onclick="document.getElementById('modalAlerta').style.display='none'" class="btn-primary">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        
+        // --- ESTADO LOCAL ---
+        let currentSlot = null;
+        let medicosMap = {}; // <--- NUEVO: Diccionario para guardar info de médicos (ID -> Datos)
+
+        // --- VARIABLE GLOBAL PARA LA CONEXIÓN SSE ---
+        let eventSource = null;
+
+        // --- INICIO ---
+        window.onload = function() {
+            cargarMedicos();
+            // Ya NO usamos setInterval aquí.
+            // La conexión se iniciará cuando el médico seleccione su nombre.
+        };
+
+        function cambiarTab(tabId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // --- FUNCIONES COMUNES ---
+        async function cargarMedicos() {
+            try {
+                const res = await fetch(`${API_URL}/medicos`);
+                const medicos = await res.json();
+                
+                const pSelect = document.getElementById('p_selectMedico');
+                pSelect.innerHTML = '<option value="">-- Seleccione una Especialidad/Médico --</option>';
+                
+                const mSelect = document.getElementById('m_selectMedicoGestor');
+                mSelect.innerHTML = '';
+
+                // Reiniciamos el mapa
+                medicosMap = {}; 
+
+                medicos.forEach(m => {
+                    // <--- NUEVO: Guardamos el médico en el mapa usando su ID como clave
+                    medicosMap[m.id] = m; 
+
+                    const texto = `Dr. ${m.nombre} ${m.apellido} (${m.especialidad})`;
+                    pSelect.innerHTML += `<option value="${m.id}">${texto}</option>`;
+                    mSelect.innerHTML += `<option value="${m.id}">${texto}</option>`;
+                });
+            } catch (e) { console.error("Error cargando médicos", e); }
+        }
+
+        function mostrarAlerta(titulo, mensaje, esError = false) {
+            const tituloElem = document.getElementById('alertaTitulo');
+            tituloElem.innerText = titulo;
+            tituloElem.className = 'modal-title ' + (esError ? 'modal-error' : 'modal-success');
+            document.getElementById('alertaMensaje').innerText = mensaje;
+            document.getElementById('modalAlerta').style.display = 'flex';
+        }
+
+        // ================= LOGICA PACIENTE =================
+
+        async function cargarHorariosDisponibles() {
+            const medicoId = document.getElementById('p_selectMedico').value;
+            const container = document.getElementById('p_tablaHorarios');
+            
+            if (!medicoId) {
+                container.innerHTML = '<p style="color:#7f8c8d">Seleccione un médico.</p>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/disponibilidad?medico_id=${medicoId}`);
+                const slots = await res.json();
+                const disponibles = slots.filter(s => s.estado === 'DISPONIBLE');
+
+                if (disponibles.length === 0) {
+                    container.innerHTML = '<p>No hay horarios disponibles.</p>';
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>Fecha y Hora</th><th>Acción</th></tr></thead><tbody>';
+                disponibles.forEach(slot => {
+                    const fecha = new Date(slot.fecha_hora).toLocaleString();
+                    html += `
+                        <tr>
+                            <td>${fecha}</td>
+                            <td><button class="btn-primary" onclick="abrirModalReserva('${slot.fecha_hora}', ${medicoId})">Reservar</button></td>
+                        </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        function abrirModalReserva(fechaHora, medicoId) {
+            currentSlot = { fecha_hora: fechaHora, medico_id: medicoId };
+            const select = document.getElementById('p_selectMedico');
+            const nombreMedico = select.options[select.selectedIndex].text;
+            
+            document.getElementById('modal_medico_nombre').innerText = nombreMedico;
+            document.getElementById('modal_fecha').innerText = new Date(fechaHora).toLocaleString();
+            document.getElementById('modalReserva').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalReserva').style.display = 'none';
+        }
+
+        async function confirmarReserva() {
+            const nombre = document.getElementById('modal_paciente_nombre').value.trim();
+            const apellido = document.getElementById('modal_paciente_apellido').value.trim();
+
+            if (!nombre || !apellido) {
+                alert("Ingrese nombre y apellido");
+                return;
+            }
+
+            const data = {
+                medico_id: currentSlot.medico_id,
+                fecha_hora: currentSlot.fecha_hora,
+                paciente_nombre: nombre,
+                paciente_apellido: apellido
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/turnos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (res.ok) {
+                    cerrarModal();
+                    mostrarAlerta("Éxito", "Cita agendada correctamente.");
+                    cargarHorariosDisponibles();
+                } else {
+                    mostrarAlerta("Error", result.error, true);
+                }
+            } catch (e) {
+                mostrarAlerta("Error de Conexión", e.message, true);
+            }
+        }
+
+        async function buscarMisTurnos() {
+            const nombre = document.getElementById('p_busqNombre').value.trim();
+            const apellido = document.getElementById('p_busqApellido').value.trim();
+
+            if (!nombre || !apellido) {
+                alert("Ingrese nombre y apellido para buscar.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/turnos?nombre=${nombre}&apellido=${apellido}`);
+                const turnos = await res.json();
+                
+                const tbody = document.querySelector('#p_tablaMisTurnos tbody');
+                tbody.innerHTML = '';
+
+                if (turnos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No se encontraron turnos.</td></tr>';
+                    return;
+                }
+
+                turnos.forEach(t => {
+                    const btnClass = t.estado === 'ANULADO' ? 'btn-secondary' : 'btn-danger';
+                    const btnText = t.estado === 'ANULADO' ? 'Anulado' : 'Anular Cita';
+                    const disabled = t.estado === 'ANULADO' ? 'disabled' : '';
+                    // Usamos type="button" aquí también por seguridad
+                    const action = t.estado === 'ANULADO' ? '' : `onclick="anularTurno(${t.id})"`;
+
+                    // <--- NUEVO: Recuperamos info del médico desde el mapa usando el ID
+                    const doc = medicosMap[t.medico_id];
+                    // Si encontramos al médico, mostramos sus datos, si no, mostramos el ID (fallback)
+                    const infoMedico = doc 
+                        ? `<strong>Dr. ${doc.nombre} ${doc.apellido}</strong><br><small>${doc.especialidad}</small>` 
+                        : `ID Médico: ${t.medico_id}`;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${new Date(t.fecha_hora).toLocaleString()}</td>
+                            <td>${infoMedico}</td> <td><strong>${t.estado}</strong></td>
+                            <td><button type="button" class="${btnClass}" ${disabled} ${action}>${btnText}</button></td>
+                        </tr>
+                    `;
+                });
+
+            } catch (e) { console.error(e); }
+        }
+
+        async function anularTurno(id) {
+            if(!confirm("¿Seguro que desea anular esta cita?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/turnos/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    mostrarAlerta("Éxito", "Turno anulado.");
+                    buscarMisTurnos(); 
+                } else {
+                    const err = await res.json();
+                    mostrarAlerta("Error", err.error, true);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // ================= LOGICA MÉDICO =================
+
+        async function registrarMedico() {
+            const nombre = document.getElementById('m_nombre').value;
+            const apellido = document.getElementById('m_apellido').value;
+            const especialidad = document.getElementById('m_especialidad').value;
+
+            if (!nombre || !apellido || !especialidad) {
+                mostrarAlerta("Error", "Complete todos los campos", true);
+                return;
+            }
+            const data = { nombre, apellido, especialidad };
+
+            try {
+                const res = await fetch(`${API_URL}/medicos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    mostrarAlerta("Éxito", "Médico registrado.");
+                    cargarMedicos(); 
+                    document.getElementById('formNuevoMedico').reset();
+                } else {
+                    const err = await res.json();
+                    mostrarAlerta("Error", err.error, true);
+                }
+            } catch (e) { 
+                console.error(e);
+                mostrarAlerta("Error de Conexión", e.message, true);
+            }
+        }
+
+        async function agregarDisponibilidad() {
+            const medId = document.getElementById('m_selectMedicoGestor').value;
+            const fecha = document.getElementById('m_nuevaFecha').value;
+            if (!medId || !fecha) { alert("Complete datos"); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/disponibilidad`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ medico_id: parseInt(medId), fecha_hora: fecha })
+                });
+                if (res.ok) {
+                    mostrarAlerta("Horario Agregado", "Disponible para reservas.");
+                } else {
+                    const err = await res.json();
+                    mostrarAlerta("Error", err.error, true);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function conectarNotificaciones() {
+            const medId = document.getElementById('m_selectMedicoGestor').value;
+            const lista = document.getElementById('listaNotificaciones');
+
+            // 1. Si ya hay una conexión abierta, la cerramos (cambio de médico)
+            if (eventSource) {
+                eventSource.close();
+                lista.innerHTML = '<div style="padding:10px; color:#aaa;">Conectando...</div>';
+            }
+
+            if (!medId) return;
+
+            console.log(`📡 Conectando SSE para Médico ${medId}...`);
+
+            // 2. Abrir nueva conexión SSE
+            eventSource = new EventSource(`${API_URL}/notificaciones?medico_id=${medId}`);
+
+            // 3. Cuando llega un mensaje
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("🔔 Notificación recibida:", data);
+                
+                // Limpiar mensaje de espera si existe
+                if(lista.innerText.includes("Sin nuevas") || lista.innerText.includes("Conectando")) {
+                    lista.innerHTML = '';
+                }
+
+                // Determinar estilos según el tipo
+                let colorBorde = '#2ecc71'; // Verde (Default)
+                let icono = '✅';
+                let titulo = 'Notificación';
+
+                if (data.tipo === 'TURNO_AGENDADO') {
+                    colorBorde = '#f1c40f'; // Amarillo
+                    icono = '📅';
+                    titulo = 'Nueva Cita';
+                } else if (data.tipo === 'TURNO_CANCELADO') {
+                    colorBorde = '#e74c3c'; // Rojo
+                    icono = '❌';
+                    titulo = 'Cita Cancelada';
+                }
+
+                const div = document.createElement('div');
+                div.className = 'notificacion-item';
+                div.style.borderLeftColor = colorBorde;
+                
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>${icono} ${titulo}</strong>
+                        <small style="color:#999">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                    <div>Paciente: <strong>${data.paciente}</strong></div>
+                    <div>Fecha Cita: ${new Date(data.fecha).toLocaleString()}</div>
+                    <small style="color:#666; font-style:italic;">"${data.mensaje}"</small>
+                `;
+                
+                // Efecto visual de entrada
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.5s';
+                lista.prepend(div);
+                
+                // Trigger reflow para animación
+                setTimeout(() => div.style.opacity = '1', 10);
+            };
+
+            eventSource.onerror = function() {
+                console.log("⚠️ Error en conexión SSE (posible desconexión temporal)");
+                // SSE intenta reconectar automáticamente, no es necesario hacer mucho aquí.
+            };
+            
+            lista.innerHTML = '<div style="padding:10px; color:#aaa;">Esperando eventos en tiempo real...</div>';
+        }
+    </script>
+</body>
+</html>

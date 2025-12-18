@@ -1,0 +1,23 @@
+# --- Python General ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# --- Base de Datos ---
+# Ignoramos la BDD para que cada usuario genere la suya limpia al iniciar
+*.db
+*.sqlite3
+backend/data/*.db
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db
+
+# --- IDEs ---
+.vscode/
+.idea/
