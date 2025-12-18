@@ -28,7 +28,7 @@ Sigue estos pasos para levantar el sistema desde cero:
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone <TU_URL_DEL_REPO>
+    git clone https://github.com/Drawnskii/sistema-hospitalario.git
     cd sistema-hospitalario
     ```
 
