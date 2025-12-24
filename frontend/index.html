@@ -3,517 +3,598 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital System - Gestión Integral</title>
+    <title>MediCore | Hospital System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* --- ESTILOS GENERALES --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; }
-        header { background-color: #2c3e50; color: white; padding: 1rem; text-align: center; }
+        :root {
+            --primary: #0ea5e9; --primary-dark: #0284c7;
+            --secondary: #64748b;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --bg-body: #f1f5f9; --bg-sidebar: #0f172a; --bg-card: #ffffff;
+            --text-main: #1e293b; --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR MEJORADO --- */
+        .sidebar {
+            width: var(--sidebar-width); background: var(--bg-sidebar); color: white; display: flex; flex-direction: column;
+            padding: 1.5rem; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; flex-shrink: 0;
+        }
+        .brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 2.5rem; display: flex; align-items: center; gap: 12px; }
+        .nav-item {
+            padding: 14px 16px; margin-bottom: 0.5rem; border-radius: 10px; cursor: pointer; color: #cbd5e1;
+            transition: all 0.2s; display: flex; align-items: center; gap: 12px; font-weight: 500;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+
+        /* --- MAIN LAYOUT --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; width: 100%; }
         
-        /* --- TABS DE NAVEGACIÓN --- */
-        .tabs { display: flex; justify-content: center; background: #34495e; }
-        .tab-btn { background: none; border: none; padding: 15px 30px; color: #bdc3c7; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
-        .tab-btn:hover { color: white; background: #2c3e50; }
-        .tab-btn.active { color: white; border-bottom: 3px solid #3498db; background: #2c3e50; font-weight: bold; }
+        header {
+            height: var(--header-height); background: var(--bg-card); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; flex-shrink: 0;
+        }
+        .menu-toggle { display: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; padding: 10px; }
+        .content-scroll { padding: 2rem; overflow-y: auto; height: calc(100vh - var(--header-height)); scroll-behavior: smooth; }
 
-        /* --- CONTENEDORES --- */
-        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; display: none; }
-        .container.active { display: block; }
+        /* --- COMPONENTS --- */
+        .card { background: var(--bg-card); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+        .card-title { font-weight: 700; font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+
+        /* --- HERO CARDS --- */
+        .hero-card {
+            background: white; border: 1px solid var(--border); border-radius: 16px; padding: 2rem; text-align: center;
+            cursor: pointer; transition: 0.3s; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hero-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--primary); }
+        .hero-icon { width: 70px; height: 70px; background: #e0f2fe; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 1rem; }
+
+        /* --- APPOINTMENT LIST ITEM (NUEVO) --- */
+        .appt-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; border: 1px solid var(--border); border-radius: 12px;
+            padding: 1.25rem; margin-bottom: 1rem; transition: 0.2s;
+        }
+        .appt-item:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .appt-info { display: flex; gap: 15px; align-items: center; }
+        .appt-date-box { 
+            background: #f8fafc; padding: 10px; border-radius: 8px; text-align: center; min-width: 70px; border: 1px solid var(--border);
+        }
+        .appt-day { font-size: 1.2rem; font-weight: 700; color: var(--text-main); line-height: 1; }
+        .appt-month { font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; }
+        .appt-details h4 { margin: 0 0 5px 0; color: var(--text-main); }
+        .appt-details p { margin: 0; color: var(--secondary); font-size: 0.9rem; }
+
+        /* --- BADGES --- */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; } /* Para ANULADO */
+        .badge-warning { background: #fff7ed; color: #9a3412; }
+
+        /* --- FORMS & BUTTONS --- */
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--secondary); margin-bottom: 0.5rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #f8fafc; }
+        input:focus, select:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
         
-        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        .row { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 300px; }
-
-        h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 0.5rem; }
-        h3 { color: #7f8c8d; margin-top: 0; }
-
-        /* --- FORMULARIOS Y TABLAS --- */
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 10px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #e2e8f0; color: var(--text-main); }
         
-        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
-        .btn-primary { background-color: #3498db; color: white; }
-        .btn-primary:hover { background-color: #2980b9; }
-        .btn-success { background-color: #27ae60; color: white; }
-        .btn-danger { background-color: #e74c3c; color: white; }
-        .btn-secondary { background-color: #95a5a6; color: white; }
+        /* Botón de Anular Mejorado */
+        .btn-outline-danger { background: white; border: 1px solid #fee2e2; color: var(--danger); }
+        .btn-outline-danger:hover { background: #fef2f2; border-color: var(--danger); }
+        .btn-disabled { opacity: 0.5; pointer-events: none; background: #f1f5f9; color: #94a3b8; border: none; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; color: #2c3e50; }
-        tr:hover { background-color: #f1f1f1; }
+        /* --- RESPONSIVE SIDEBAR OVERLAY --- */
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; 
+            opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(2px);
+        }
+        .sidebar.active + .sidebar-overlay { opacity: 1; visibility: visible; }
 
-        /* --- NOTIFICACIONES (MÉDICO) --- */
-        #listaNotificaciones { max-height: 300px; overflow-y: auto; }
-        .notificacion-item { padding: 10px; border-left: 4px solid #f1c40f; background: #fffcf5; margin-bottom: 5px; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; height: 100%; left: -100%; box-shadow: 10px 0 20px rgba(0,0,0,0.1); }
+            .sidebar.active { transform: translateX(100%); left: -260px; /* Ajuste para que entre desde la izquierda */ }
+            /* Corrección: Transform translateX relative to itself */
+            .sidebar { transform: translateX(0); left: -260px; } 
+            .sidebar.active { transform: translateX(100%); }
 
-        /* --- MODAL --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
-        .modal-error { color: #e74c3c; }
-        .modal-success { color: #27ae60; }
+            .menu-toggle { display: block; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .appt-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .appt-actions { width: 100%; display: flex; justify-content: flex-end; }
+        }
+
+        /* --- TOAST & MODAL --- */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 16px; border-radius: 12px; background: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; border-left: 5px solid #ccc; animation: slideIn 0.3s; }
+        .toast.success { border-left-color: var(--success); } .toast.error { border-left-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-box { background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>🏥 Sistema Hospitalario</h1>
-    </header>
+    <aside class="sidebar" id="mainSidebar">
+        <div class="brand"><i class="fa-solid fa-heart-pulse"></i> MediCore</div>
+        <nav>
+            <div class="nav-item active" onclick="app.navigate('vista-inicio', this)">
+                <i class="fa-solid fa-house"></i> Inicio
+            </div>
+            <div class="nav-item" onclick="app.navigate('vista-paciente', this)">
+                <i class="fa-solid fa-user-injured"></i> Pacientes
+            </div>
+            <div class="nav-item" onclick="app.navigate('vista-medico', this)">
+                <i class="fa-solid fa-user-doctor"></i> Portal Médico
+            </div>
+            <div class="nav-item" onclick="app.navigate('vista-admin', this)">
+                <i class="fa-solid fa-shield-halved"></i> Administración
+            </div>
+        </nav>
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; color: #64748b;">
+            Sistema v3.0
+        </div>
+    </aside>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="cambiarTab('vista-paciente')">👤 Vista Paciente</button>
-        <button class="tab-btn" onclick="cambiarTab('vista-medico')">👨‍⚕️ Vista Médico</button>
-    </div>
+    <div class="sidebar-overlay" onclick="ui.toggleMenu()"></div>
 
-    <div id="vista-paciente" class="container active">
-        
-        <div class="card">
-            <h2>📅 Agendar Cita</h2>
-            <div class="row">
-                <div class="col">
-                    <h3>1. Seleccione Médico</h3>
-                    <select id="p_selectMedico" onchange="cargarHorariosDisponibles()">
-                        <option value="">-- Seleccione una Especialidad/Médico --</option>
-                    </select>
+    <main class="main-content">
+        <header>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fa-solid fa-bars menu-toggle" onclick="ui.toggleMenu()"></i>
+                <h2 id="pageTitle" style="margin:0; font-size: 1.25rem;">Bienvenido</h2>
+            </div>
+            <div style="width: 35px; height: 35px; background: #f1f5f9; color: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">U</div>
+        </header>
+
+        <div class="content-scroll">
+
+            <section id="vista-inicio" class="view-section" style="display: block;">
+                <div style="text-align: center; margin-bottom: 3rem; padding-top: 2rem;">
+                    <h1 style="color: var(--primary-dark); margin-bottom: 0.5rem;">Hospital Central MediCore</h1>
+                    <p style="color: var(--secondary);">Sistema integral de gestión de turnos.</p>
                 </div>
-                <div class="col">
-                    <h3>2. Horarios Disponibles</h3>
-                    <div id="p_tablaHorarios">
-                        <p style="color:#7f8c8d">Seleccione un médico para ver horarios.</p>
+
+                <div class="grid-3">
+                    <div class="hero-card" onclick="app.navigate('vista-paciente', document.querySelectorAll('.nav-item')[1])">
+                        <div class="hero-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        <h3>Soy Paciente</h3>
+                        <p style="color: var(--text-muted);">Gestionar mis citas</p>
+                    </div>
+                    <div class="hero-card" onclick="app.navigate('vista-medico', document.querySelectorAll('.nav-item')[2])">
+                        <div class="hero-icon" style="background:#f0fdf4; color:var(--success);"><i class="fa-solid fa-stethoscope"></i></div>
+                        <h3>Soy Médico</h3>
+                        <p style="color: var(--text-muted);">Ver agenda y pacientes</p>
+                    </div>
+                    <div class="hero-card" onclick="app.navigate('vista-admin', document.querySelectorAll('.nav-item')[3])">
+                        <div class="hero-icon" style="background:#fff7ed; color:var(--warning);"><i class="fa-solid fa-user-gear"></i></div>
+                        <h3>Administración</h3>
+                        <p style="color: var(--text-muted);">Altas de personal</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div class="card">
-            <h2>🎟️ Mis Turnos</h2>
-            <div class="row" style="align-items: flex-end;">
-                <div class="col">
-                    <label>Nombre:</label>
-                    <input type="text" id="p_busqNombre" placeholder="Tu nombre">
-                </div>
-                <div class="col">
-                    <label>Apellido:</label>
-                    <input type="text" id="p_busqApellido" placeholder="Tu apellido">
-                </div>
-                <div class="col" style="flex: 0;">
-                    <button class="btn-secondary" onclick="buscarMisTurnos()">Buscar</button>
-                </div>
-            </div>
-            <table id="p_tablaMisTurnos">
-                <thead>
-                    <tr>
-                        <th>Fecha/Hora</th>
-                        <th>Médico</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="4">Ingresa tus datos para buscar.</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="vista-medico" class="container">
-        
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <h2>👨‍⚕️ Registrar Nuevo Médico</h2>
-                    <form id="formNuevoMedico" onsubmit="event.preventDefault();">
-                        <label>Nombre:</label>
-                        <input type="text" id="m_nombre" required>
-                        <label>Apellido:</label>
-                        <input type="text" id="m_apellido" required>
-                        <label>Especialidad:</label>
-                        <input type="text" id="m_especialidad" required>
-                        <button type="button" onclick="registrarMedico()" class="btn-primary">Registrar Médico</button>
-                    </form>
+            <section id="vista-paciente" class="view-section" style="display:none;">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Agendar Nueva Cita</span></div>
+                        <label>Especialidad</label>
+                        <select id="p_filtroEspecialidad" onchange="ui.filtrarMedicos()"></select>
+                        <label style="margin-top: 1rem;">Médico</label>
+                        <select id="p_selectMedico" onchange="app.cargarHorariosDisponibles()" disabled>
+                            <option value="">-- Seleccione especialidad --</option>
+                        </select>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title"><i class="fa-regular fa-clock"></i> Horarios Disponibles</span></div>
+                        <div id="p_tablaHorarios" style="max-height: 300px; overflow-y: auto;">
+                            <div style="text-align:center; padding: 2rem; color: var(--text-muted);">Seleccione un médico.</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
-                    <h2>🕒 Gestionar Disponibilidad</h2>
-                    <label>Soy el Médico:</label>
-                    <select id="m_selectMedicoGestor" onchange="conectarNotificaciones()"></select>
+                    <div class="card-header"><span class="card-title"><i class="fa-solid fa-ticket"></i> Mis Turnos</span></div>
+                    <div class="grid-3" style="align-items: end; margin-bottom: 1.5rem;">
+                        <div><label>Nombre</label><input type="text" id="p_busqNombre"></div>
+                        <div><label>Apellido</label><input type="text" id="p_busqApellido"></div>
+                        <button class="btn-primary" onclick="app.buscarMisTurnos()">Buscar Mis Turnos</button>
+                    </div>
                     
-                    <label>Nueva Fecha/Hora Disponible:</label>
-                    <input type="datetime-local" id="m_nuevaFecha">
-                    <button onclick="agregarDisponibilidad()" class="btn-success">Agregar Horario</button>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card" style="background-color: #fffde7; border: 1px solid #f1c40f;">
-                    <h2>🔔 Centro de Notificaciones (Simulación Kafka)</h2>
-                    <p style="font-size: 0.8rem;">Este panel se actualiza automáticamente cada 5 seg.</p>
-                    <div id="listaNotificaciones">
-                        <div style="padding:10px; color:#aaa;">Sin nuevas notificaciones...</div>
+                    <div id="listaTurnosContainer">
+                        <div style="text-align:center; padding:2rem; background:#f8fafc; border-radius:12px; border:1px dashed var(--border); color:var(--text-muted);">
+                            Ingresa tu nombre y apellido para ver tus citas agendadas.
+                        </div>
                     </div>
                 </div>
+            </section>
+
+            <section id="vista-medico" class="view-section" style="display:none;">
+                <div id="medico-login-screen" style="max-width: 500px; margin: 40px auto;">
+                    <div class="card" style="text-align: center; padding: 3rem;">
+                        <div style="width: 80px; height: 80px; background: var(--bg-body); border-radius: 50%; margin: 0 auto 1.5rem auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--secondary);">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                        <h2>Acceso Médico</h2>
+                        <select id="m_selectLogin" style="margin-bottom: 1.5rem; margin-top: 1rem;"></select>
+                        <button class="btn-primary" style="width: 100%;" onclick="app.loginMedico()">Ingresar</button>
+                    </div>
+                </div>
+
+                <div id="medico-dashboard" style="display: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 id="dash_medico_nombre" style="margin: 0;">Dr. Desconocido</h2>
+                                <p id="dash_medico_esp" style="margin: 0; opacity: 0.9;">Especialidad</p>
+                            </div>
+                            <button onclick="app.logoutMedico()" style="background: rgba(255,255,255,0.2); color: white;">Salir</button>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><span class="card-title"><i class="fa-solid fa-calendar-plus"></i> Publicar Agenda</span></div>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="datetime-local" id="m_nuevaFecha">
+                                <button class="btn-primary" onclick="app.agregarDisponibilidad()">Publicar</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><span class="card-title"><i class="fa-solid fa-bell"></i> Notificaciones</span></div>
+                            <div id="listaNotificaciones" style="height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="text-align: center; color: #94a3b8; margin-top: 2rem;">Esperando eventos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vista-admin" class="view-section" style="display:none;">
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title"><i class="fa-solid fa-user-plus"></i> Alta Médico</span></div>
+                        <form onsubmit="event.preventDefault(); app.registrarMedico();">
+                            <div class="grid-2" style="margin-bottom: 1rem;">
+                                <input type="text" id="admin_nombre" placeholder="Nombre" required>
+                                <input type="text" id="admin_apellido" placeholder="Apellido" required>
+                            </div>
+                            <input type="text" id="admin_especialidad" placeholder="Especialidad" required style="margin-bottom: 1.5rem;">
+                            <button type="submit" class="btn-primary" style="width: 100%;">Registrar</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <div id="modalConfirm" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <div style="width: 60px; height: 60px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; font-size: 1.5rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 style="margin: 0.5rem 0;">¿Anular Cita?</h3>
+            <p style="color: var(--secondary); margin-bottom: 1.5rem;">Esta acción liberará el horario para otro paciente.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn-secondary" onclick="document.getElementById('modalConfirm').style.display='none'">No, Volver</button>
+                <button class="btn-primary" style="background: var(--danger);" id="btnConfirmAction">Sí, Anular</button>
             </div>
         </div>
     </div>
 
     <div id="modalReserva" class="modal-overlay">
         <div class="modal-box">
-            <h3 class="modal-title">Confirmar Reserva</h3>
-            <p>Estás a punto de agendar con el <strong id="modal_medico_nombre"></strong></p>
-            <p>Fecha: <strong id="modal_fecha"></strong></p>
-            
-            <label style="text-align: left;">Tu Nombre:</label>
-            <input type="text" id="modal_paciente_nombre">
-            
-            <label style="text-align: left;">Tu Apellido:</label>
-            <input type="text" id="modal_paciente_apellido">
-
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1rem;">
-                <button onclick="cerrarModal()" class="btn-secondary">Cancelar</button>
-                <button onclick="confirmarReserva()" class="btn-primary">Confirmar</button>
+            <h3>Confirmar Cita</h3>
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:1rem; border:1px solid var(--border);">
+                <strong id="modal_info_medico" style="display:block; color:var(--text-main);"></strong>
+                <span id="modal_info_fecha" style="color:var(--primary); font-size:0.9rem;"></span>
             </div>
-        </div>
-    </div>
-
-    <div id="modalAlerta" class="modal-overlay">
-        <div class="modal-box">
-            <h3 id="alertaTitulo" class="modal-title">Atención</h3>
-            <p id="alertaMensaje"></p>
-            <button onclick="document.getElementById('modalAlerta').style.display='none'" class="btn-primary">Entendido</button>
+            <label>Nombre</label><input type="text" id="res_nombre" style="margin-bottom:10px;">
+            <label>Apellido</label><input type="text" id="res_apellido" style="margin-bottom:20px;">
+            <div style="display:flex; justify-content:end; gap:10px;">
+                <button class="btn-secondary" onclick="document.getElementById('modalReserva').style.display='none'">Cancelar</button>
+                <button class="btn-primary" onclick="app.finalizarReserva()">Confirmar</button>
+            </div>
         </div>
     </div>
 
     <script>
         const API_URL = 'http://localhost:8000/api';
-        
-        // --- ESTADO LOCAL ---
-        let currentSlot = null;
-        let medicosMap = {}; // <--- NUEVO: Diccionario para guardar info de médicos (ID -> Datos)
 
-        // --- VARIABLE GLOBAL PARA LA CONEXIÓN SSE ---
-        let eventSource = null;
+        const ui = {
+            toggleMenu: () => {
+                const sb = document.getElementById('mainSidebar');
+                sb.classList.toggle('active');
+            },
+            
+            toast: (msg, type='success') => {
+                const c = document.getElementById('toast-container');
+                const d = document.createElement('div');
+                d.className = `toast ${type}`;
+                d.innerHTML = type === 'success' 
+                    ? `<i class="fa-solid fa-check-circle" style="color:var(--success)"></i> ${msg}` 
+                    : `<i class="fa-solid fa-circle-exclamation" style="color:var(--danger)"></i> ${msg}`;
+                c.appendChild(d);
+                setTimeout(() => d.remove(), 3500);
+            },
 
-        // --- INICIO ---
-        window.onload = function() {
-            cargarMedicos();
-            // Ya NO usamos setInterval aquí.
-            // La conexión se iniciará cuando el médico seleccione su nombre.
+            // Modal customizado para confirmar anulación
+            confirmarAnulacion: (callback) => {
+                const modal = document.getElementById('modalConfirm');
+                const btn = document.getElementById('btnConfirmAction');
+                // Clonar botón para limpiar eventos previos
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.onclick = () => {
+                    callback();
+                    modal.style.display = 'none';
+                };
+                modal.style.display = 'flex';
+            },
+
+            filtrarMedicos: () => {
+                const esp = document.getElementById('p_filtroEspecialidad').value;
+                const sel = document.getElementById('p_selectMedico');
+                sel.innerHTML = '<option value="">-- Seleccione Médico --</option>';
+                sel.disabled = false;
+                const lista = esp === 'todas' ? app.medicos : app.medicos.filter(m => m.especialidad === esp);
+                lista.forEach(m => sel.innerHTML += `<option value="${m.id}">Dr. ${m.nombre} ${m.apellido}</option>`);
+            }
         };
 
-        function cambiarTab(tabId) {
-            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-        }
+        const app = {
+            medicos: [],
+            currentDoctorId: null,
+            eventSource: null,
+            bookingSlot: null,
 
-        // --- FUNCIONES COMUNES ---
-        async function cargarMedicos() {
-            try {
-                const res = await fetch(`${API_URL}/medicos`);
-                const medicos = await res.json();
+            init: async () => {
+                await app.fetchMedicos();
+            },
+
+            navigate: (viewId, btn) => {
+                document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 
-                const pSelect = document.getElementById('p_selectMedico');
-                pSelect.innerHTML = '<option value="">-- Seleccione una Especialidad/Médico --</option>';
-                
-                const mSelect = document.getElementById('m_selectMedicoGestor');
-                mSelect.innerHTML = '';
+                document.getElementById(viewId).style.display = 'block';
+                if(btn) btn.classList.add('active');
 
-                // Reiniciamos el mapa
-                medicosMap = {}; 
+                // Títulos dinámicos
+                const titles = { 'vista-inicio': 'Inicio', 'vista-paciente': 'Portal Paciente', 'vista-medico': 'Portal Médico', 'vista-admin': 'Administración' };
+                document.getElementById('pageTitle').innerText = titles[viewId] || 'Hospital';
 
-                medicos.forEach(m => {
-                    // <--- NUEVO: Guardamos el médico en el mapa usando su ID como clave
-                    medicosMap[m.id] = m; 
+                // Lógica de vista médico
+                if (viewId === 'vista-medico') {
+                    document.getElementById('medico-login-screen').style.display = app.currentDoctorId ? 'none' : 'block';
+                    document.getElementById('medico-dashboard').style.display = app.currentDoctorId ? 'block' : 'none';
+                }
 
-                    const texto = `Dr. ${m.nombre} ${m.apellido} (${m.especialidad})`;
-                    pSelect.innerHTML += `<option value="${m.id}">${texto}</option>`;
-                    mSelect.innerHTML += `<option value="${m.id}">${texto}</option>`;
+                // Cerrar menú en móvil al navegar
+                if(window.innerWidth <= 768) {
+                    document.getElementById('mainSidebar').classList.remove('active');
+                }
+            },
+
+            fetchMedicos: async () => {
+                try {
+                    const res = await fetch(`${API_URL}/medicos`);
+                    app.medicos = await res.json();
+                    
+                    const esps = [...new Set(app.medicos.map(m => m.especialidad))];
+                    const fil = document.getElementById('p_filtroEspecialidad');
+                    fil.innerHTML = '<option value="todas">Todas</option>';
+                    esps.forEach(e => fil.innerHTML += `<option value="${e}">${e}</option>`);
+                    ui.filtrarMedicos();
+
+                    const loginSel = document.getElementById('m_selectLogin');
+                    loginSel.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
+                    app.medicos.forEach(m => loginSel.innerHTML += `<option value="${m.id}">Dr. ${m.nombre} ${m.apellido} (${m.especialidad})</option>`);
+                } catch(e) { ui.toast("Error cargando sistema", "error"); }
+            },
+
+            // --- PACIENTE ---
+            cargarHorariosDisponibles: async () => {
+                const id = document.getElementById('p_selectMedico').value;
+                if(!id) return;
+                try {
+                    const res = await fetch(`${API_URL}/disponibilidad?medico_id=${id}`);
+                    const data = await res.json();
+                    const container = document.getElementById('p_tablaHorarios');
+                    const available = data.filter(x => x.estado === 'DISPONIBLE');
+                    
+                    if(available.length === 0) container.innerHTML = '<div style="text-align:center; padding:1rem; color:#94a3b8">Sin horarios disponibles</div>';
+                    else {
+                        container.innerHTML = available.map(s => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee;">
+                                <div>
+                                    <div style="font-weight:600; color:var(--primary);">${new Date(s.fecha_hora).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                    <div style="font-size:0.8rem; color:#64748b;">${new Date(s.fecha_hora).toLocaleDateString()}</div>
+                                </div>
+                                <button class="btn-primary" style="padding:6px 14px; font-size:0.8rem;" onclick="app.abrirModal('${s.fecha_hora}', ${id})">Reservar</button>
+                            </div>
+                        `).join('');
+                    }
+                } catch(e) { console.error(e); }
+            },
+
+            abrirModal: (fecha, medId) => {
+                app.bookingSlot = { fecha, medId };
+                const m = app.medicos.find(x => x.id == medId);
+                document.getElementById('modal_info_medico').innerText = `Dr. ${m.apellido}`;
+                document.getElementById('modal_info_fecha').innerText = new Date(fecha).toLocaleString();
+                document.getElementById('modalReserva').style.display = 'flex';
+            },
+
+            finalizarReserva: async () => {
+                const nom = document.getElementById('res_nombre').value;
+                const ape = document.getElementById('res_apellido').value;
+                if(!nom || !ape) return ui.toast("Complete sus datos", "error");
+
+                try {
+                    const res = await fetch(`${API_URL}/turnos`, {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({
+                            medico_id: app.bookingSlot.medId,
+                            fecha_hora: app.bookingSlot.fecha,
+                            paciente_nombre: nom, paciente_apellido: ape
+                        })
+                    });
+                    if(res.ok) {
+                        ui.toast("Cita agendada con éxito");
+                        document.getElementById('modalReserva').style.display = 'none';
+                        app.cargarHorariosDisponibles();
+                    } else ui.toast("Error al reservar", "error");
+                } catch(e) { ui.toast("Error de red", "error"); }
+            },
+
+            buscarMisTurnos: async () => {
+                const n = document.getElementById('p_busqNombre').value;
+                const a = document.getElementById('p_busqApellido').value;
+                if(!n || !a) return ui.toast("Ingrese nombre y apellido", "error");
+
+                try {
+                    const res = await fetch(`${API_URL}/turnos?nombre=${n}&apellido=${a}`);
+                    const data = await res.json();
+                    const container = document.getElementById('listaTurnosContainer');
+                    
+                    if(data.length === 0) {
+                        container.innerHTML = '<div style="text-align:center; padding:2rem; color:#94a3b8">No se encontraron citas.</div>';
+                    } else {
+                        // RENDERIZADO MEJORADO: Tarjetas en lugar de tabla
+                        container.innerHTML = data.map(t => {
+                            const m = app.medicos.find(x => x.id === t.medico_id);
+                            const fechaObj = new Date(t.fecha_hora);
+                            const dia = fechaObj.getDate();
+                            const mes = fechaObj.toLocaleString('es-ES', { month: 'short' });
+                            const hora = fechaObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            const isAnulado = t.estado === 'ANULADO';
+                            
+                            const badge = isAnulado 
+                                ? '<span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Cancelado</span>' 
+                                : '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Confirmado</span>';
+                            
+                            const boton = isAnulado
+                                ? `<button class="btn-disabled">Anulado</button>`
+                                : `<button class="btn-outline-danger" onclick="app.anular(${t.id})"><i class="fa-regular fa-trash-can"></i> Anular</button>`;
+
+                            return `
+                                <div class="appt-item" style="${isAnulado ? 'opacity:0.6; background:#fafafa;' : ''}">
+                                    <div class="appt-info">
+                                        <div class="appt-date-box">
+                                            <div class="appt-day">${dia}</div>
+                                            <div class="appt-month">${mes}</div>
+                                        </div>
+                                        <div class="appt-details">
+                                            <h4>${m ? 'Dr. ' + m.apellido : 'Médico'} <small style="font-weight:400; color:var(--primary);">(${hora})</small></h4>
+                                            <p>${m ? m.especialidad : ''}</p>
+                                            <div style="margin-top:5px;">${badge}</div>
+                                        </div>
+                                    </div>
+                                    <div class="appt-actions">
+                                        ${boton}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } catch(e) { console.error(e); }
+            },
+
+            anular: (id) => {
+                // Usamos el modal customizado en lugar de confirm()
+                ui.confirmarAnulacion(async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/turnos/${id}`, {method:'DELETE'});
+                        if(res.ok) {
+                            ui.toast("Cita anulada correctamente");
+                            app.buscarMisTurnos(); // Recargar lista para ver cambio visual
+                        } else {
+                            ui.toast("Error al anular", "error");
+                        }
+                    } catch(e) { ui.toast("Error de conexión", "error"); }
                 });
-            } catch (e) { console.error("Error cargando médicos", e); }
-        }
+            },
 
-        function mostrarAlerta(titulo, mensaje, esError = false) {
-            const tituloElem = document.getElementById('alertaTitulo');
-            tituloElem.innerText = titulo;
-            tituloElem.className = 'modal-title ' + (esError ? 'modal-error' : 'modal-success');
-            document.getElementById('alertaMensaje').innerText = mensaje;
-            document.getElementById('modalAlerta').style.display = 'flex';
-        }
+            // --- MÉDICO & ADMIN ---
+            loginMedico: () => {
+                const id = document.getElementById('m_selectLogin').value;
+                if(!id) return ui.toast("Seleccione un perfil", "error");
+                const m = app.medicos.find(x => x.id == id);
+                app.currentDoctorId = id;
+                document.getElementById('dash_medico_nombre').innerText = `Dr. ${m.nombre} ${m.apellido}`;
+                document.getElementById('dash_medico_esp').innerText = m.especialidad;
+                app.conectarSSE(id);
+                document.getElementById('medico-login-screen').style.display = 'none';
+                document.getElementById('medico-dashboard').style.display = 'block';
+                ui.toast("Sesión iniciada");
+            },
 
-        // ================= LOGICA PACIENTE =================
+            logoutMedico: () => {
+                app.currentDoctorId = null;
+                if(app.eventSource) app.eventSource.close();
+                document.getElementById('m_selectLogin').value = "";
+                document.getElementById('medico-dashboard').style.display = 'none';
+                document.getElementById('medico-login-screen').style.display = 'block';
+            },
 
-        async function cargarHorariosDisponibles() {
-            const medicoId = document.getElementById('p_selectMedico').value;
-            const container = document.getElementById('p_tablaHorarios');
-            
-            if (!medicoId) {
-                container.innerHTML = '<p style="color:#7f8c8d">Seleccione un médico.</p>';
-                return;
-            }
+            conectarSSE: (id) => {
+                if(app.eventSource) app.eventSource.close();
+                const list = document.getElementById('listaNotificaciones');
+                list.innerHTML = '';
+                app.eventSource = new EventSource(`${API_URL}/notificaciones?medico_id=${id}`);
+                app.eventSource.onmessage = (e) => {
+                    const d = JSON.parse(e.data);
+                    const div = document.createElement('div');
+                    div.style = `padding:10px; border-left:4px solid ${d.tipo==='TURNO_AGENDADO'?'var(--primary)':'var(--danger)'}; background:white; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1); font-size:0.9rem; animation:slideIn 0.3s;`;
+                    div.innerHTML = `<strong>${d.tipo}</strong><br>${d.mensaje}<br><small style="color:#64748b">Paciente: ${d.paciente}</small>`;
+                    list.prepend(div);
+                };
+            },
 
-            try {
-                const res = await fetch(`${API_URL}/disponibilidad?medico_id=${medicoId}`);
-                const slots = await res.json();
-                const disponibles = slots.filter(s => s.estado === 'DISPONIBLE');
-
-                if (disponibles.length === 0) {
-                    container.innerHTML = '<p>No hay horarios disponibles.</p>';
-                    return;
-                }
-
-                let html = '<table><thead><tr><th>Fecha y Hora</th><th>Acción</th></tr></thead><tbody>';
-                disponibles.forEach(slot => {
-                    const fecha = new Date(slot.fecha_hora).toLocaleString();
-                    html += `
-                        <tr>
-                            <td>${fecha}</td>
-                            <td><button class="btn-primary" onclick="abrirModalReserva('${slot.fecha_hora}', ${medicoId})">Reservar</button></td>
-                        </tr>`;
+            agregarDisponibilidad: async () => {
+                const fecha = document.getElementById('m_nuevaFecha').value;
+                if(!fecha) return ui.toast("Seleccione fecha", "error");
+                await fetch(`${API_URL}/disponibilidad`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({medico_id: parseInt(app.currentDoctorId), fecha_hora: fecha})
                 });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } catch (e) { console.error(e); }
-        }
+                ui.toast("Horario publicado");
+            },
 
-        function abrirModalReserva(fechaHora, medicoId) {
-            currentSlot = { fecha_hora: fechaHora, medico_id: medicoId };
-            const select = document.getElementById('p_selectMedico');
-            const nombreMedico = select.options[select.selectedIndex].text;
-            
-            document.getElementById('modal_medico_nombre').innerText = nombreMedico;
-            document.getElementById('modal_fecha').innerText = new Date(fechaHora).toLocaleString();
-            document.getElementById('modalReserva').style.display = 'flex';
-        }
-
-        function cerrarModal() {
-            document.getElementById('modalReserva').style.display = 'none';
-        }
-
-        async function confirmarReserva() {
-            const nombre = document.getElementById('modal_paciente_nombre').value.trim();
-            const apellido = document.getElementById('modal_paciente_apellido').value.trim();
-
-            if (!nombre || !apellido) {
-                alert("Ingrese nombre y apellido");
-                return;
-            }
-
-            const data = {
-                medico_id: currentSlot.medico_id,
-                fecha_hora: currentSlot.fecha_hora,
-                paciente_nombre: nombre,
-                paciente_apellido: apellido
-            };
-
-            try {
-                const res = await fetch(`${API_URL}/turnos`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
+            registrarMedico: async () => {
+                const n = document.getElementById('admin_nombre').value;
+                const a = document.getElementById('admin_apellido').value;
+                const e = document.getElementById('admin_especialidad').value;
+                await fetch(`${API_URL}/medicos`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({nombre:n, apellido:a, especialidad:e})
                 });
-                const result = await res.json();
-
-                if (res.ok) {
-                    cerrarModal();
-                    mostrarAlerta("Éxito", "Cita agendada correctamente.");
-                    cargarHorariosDisponibles();
-                } else {
-                    mostrarAlerta("Error", result.error, true);
-                }
-            } catch (e) {
-                mostrarAlerta("Error de Conexión", e.message, true);
+                ui.toast("Médico registrado");
+                document.querySelector('#vista-admin form').reset();
+                app.fetchMedicos();
             }
-        }
+        };
 
-        async function buscarMisTurnos() {
-            const nombre = document.getElementById('p_busqNombre').value.trim();
-            const apellido = document.getElementById('p_busqApellido').value.trim();
-
-            if (!nombre || !apellido) {
-                alert("Ingrese nombre y apellido para buscar.");
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/turnos?nombre=${nombre}&apellido=${apellido}`);
-                const turnos = await res.json();
-                
-                const tbody = document.querySelector('#p_tablaMisTurnos tbody');
-                tbody.innerHTML = '';
-
-                if (turnos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4">No se encontraron turnos.</td></tr>';
-                    return;
-                }
-
-                turnos.forEach(t => {
-                    const btnClass = t.estado === 'ANULADO' ? 'btn-secondary' : 'btn-danger';
-                    const btnText = t.estado === 'ANULADO' ? 'Anulado' : 'Anular Cita';
-                    const disabled = t.estado === 'ANULADO' ? 'disabled' : '';
-                    // Usamos type="button" aquí también por seguridad
-                    const action = t.estado === 'ANULADO' ? '' : `onclick="anularTurno(${t.id})"`;
-
-                    // <--- NUEVO: Recuperamos info del médico desde el mapa usando el ID
-                    const doc = medicosMap[t.medico_id];
-                    // Si encontramos al médico, mostramos sus datos, si no, mostramos el ID (fallback)
-                    const infoMedico = doc 
-                        ? `<strong>Dr. ${doc.nombre} ${doc.apellido}</strong><br><small>${doc.especialidad}</small>` 
-                        : `ID Médico: ${t.medico_id}`;
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${new Date(t.fecha_hora).toLocaleString()}</td>
-                            <td>${infoMedico}</td> <td><strong>${t.estado}</strong></td>
-                            <td><button type="button" class="${btnClass}" ${disabled} ${action}>${btnText}</button></td>
-                        </tr>
-                    `;
-                });
-
-            } catch (e) { console.error(e); }
-        }
-
-        async function anularTurno(id) {
-            if(!confirm("¿Seguro que desea anular esta cita?")) return;
-
-            try {
-                const res = await fetch(`${API_URL}/turnos/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    mostrarAlerta("Éxito", "Turno anulado.");
-                    buscarMisTurnos(); 
-                } else {
-                    const err = await res.json();
-                    mostrarAlerta("Error", err.error, true);
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        // ================= LOGICA MÉDICO =================
-
-        async function registrarMedico() {
-            const nombre = document.getElementById('m_nombre').value;
-            const apellido = document.getElementById('m_apellido').value;
-            const especialidad = document.getElementById('m_especialidad').value;
-
-            if (!nombre || !apellido || !especialidad) {
-                mostrarAlerta("Error", "Complete todos los campos", true);
-                return;
-            }
-            const data = { nombre, apellido, especialidad };
-
-            try {
-                const res = await fetch(`${API_URL}/medicos`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    mostrarAlerta("Éxito", "Médico registrado.");
-                    cargarMedicos(); 
-                    document.getElementById('formNuevoMedico').reset();
-                } else {
-                    const err = await res.json();
-                    mostrarAlerta("Error", err.error, true);
-                }
-            } catch (e) { 
-                console.error(e);
-                mostrarAlerta("Error de Conexión", e.message, true);
-            }
-        }
-
-        async function agregarDisponibilidad() {
-            const medId = document.getElementById('m_selectMedicoGestor').value;
-            const fecha = document.getElementById('m_nuevaFecha').value;
-            if (!medId || !fecha) { alert("Complete datos"); return; }
-
-            try {
-                const res = await fetch(`${API_URL}/disponibilidad`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ medico_id: parseInt(medId), fecha_hora: fecha })
-                });
-                if (res.ok) {
-                    mostrarAlerta("Horario Agregado", "Disponible para reservas.");
-                } else {
-                    const err = await res.json();
-                    mostrarAlerta("Error", err.error, true);
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function conectarNotificaciones() {
-            const medId = document.getElementById('m_selectMedicoGestor').value;
-            const lista = document.getElementById('listaNotificaciones');
-
-            // 1. Si ya hay una conexión abierta, la cerramos (cambio de médico)
-            if (eventSource) {
-                eventSource.close();
-                lista.innerHTML = '<div style="padding:10px; color:#aaa;">Conectando...</div>';
-            }
-
-            if (!medId) return;
-
-            console.log(`📡 Conectando SSE para Médico ${medId}...`);
-
-            // 2. Abrir nueva conexión SSE
-            eventSource = new EventSource(`${API_URL}/notificaciones?medico_id=${medId}`);
-
-            // 3. Cuando llega un mensaje
-            eventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                console.log("🔔 Notificación recibida:", data);
-                
-                // Limpiar mensaje de espera si existe
-                if(lista.innerText.includes("Sin nuevas") || lista.innerText.includes("Conectando")) {
-                    lista.innerHTML = '';
-                }
-
-                // Determinar estilos según el tipo
-                let colorBorde = '#2ecc71'; // Verde (Default)
-                let icono = '✅';
-                let titulo = 'Notificación';
-
-                if (data.tipo === 'TURNO_AGENDADO') {
-                    colorBorde = '#f1c40f'; // Amarillo
-                    icono = '📅';
-                    titulo = 'Nueva Cita';
-                } else if (data.tipo === 'TURNO_CANCELADO') {
-                    colorBorde = '#e74c3c'; // Rojo
-                    icono = '❌';
-                    titulo = 'Cita Cancelada';
-                }
-
-                const div = document.createElement('div');
-                div.className = 'notificacion-item';
-                div.style.borderLeftColor = colorBorde;
-                
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${icono} ${titulo}</strong>
-                        <small style="color:#999">${new Date().toLocaleTimeString()}</small>
-                    </div>
-                    <div>Paciente: <strong>${data.paciente}</strong></div>
-                    <div>Fecha Cita: ${new Date(data.fecha).toLocaleString()}</div>
-                    <small style="color:#666; font-style:italic;">"${data.mensaje}"</small>
-                `;
-                
-                // Efecto visual de entrada
-                div.style.opacity = '0';
-                div.style.transition = 'opacity 0.5s';
-                lista.prepend(div);
-                
-                // Trigger reflow para animación
-                setTimeout(() => div.style.opacity = '1', 10);
-            };
-
-            eventSource.onerror = function() {
-                console.log("⚠️ Error en conexión SSE (posible desconexión temporal)");
-                // SSE intenta reconectar automáticamente, no es necesario hacer mucho aquí.
-            };
-            
-            lista.innerHTML = '<div style="padding:10px; color:#aaa;">Esperando eventos en tiempo real...</div>';
-        }
+        window.onload = app.init;
     </script>
 </body>
 </html>

@@ -13,7 +13,7 @@ from data.repositories import SqliteMedicoRepository, SqliteTurnosRepository, Sq
 from logic.services import MedicoService, AgendamientoService
 from logic.dtos import CrearMedicoDTO, AgregarDisponibilidadDTO, AgendarTurnoDTO
 from logic.models import EstadoTurno
-from services.messaging import InMemoryMessageBroker
+from services.messaging import RabbitMQMessageBroker
 
 # Configuración
 PORT = 8000
@@ -30,7 +30,7 @@ DatabaseConfig.initialize_db()
 medico_repo = SqliteMedicoRepository()
 disp_repo = SqliteDisponibilidadRepository()
 turno_repo = SqliteTurnosRepository()
-broker = InMemoryMessageBroker()
+broker = RabbitMQMessageBroker()
 
 medico_service = MedicoService(medico_repo, disp_repo)
 agendamiento_service = AgendamientoService(turno_repo, disp_repo, broker)
